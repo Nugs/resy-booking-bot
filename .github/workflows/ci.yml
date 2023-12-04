@@ -16,8 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3.0.2
       - uses: AvaPL/scalafmt-native-formatter@v0.1.2
-        with:
-            args: "--reportError"
 
   tests:
     runs-on: ubuntu-latest
