@@ -6,6 +6,8 @@ import pureconfig.configurable.{localDateConfigConvert, localDateTimeConfigConve
 
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.time.format.DateTimeFormatter
+import java.util.TimeZone
+import scala.util.Try
 
 package object resy {
 
@@ -19,12 +21,14 @@ package object resy {
 
   implicit val localDateTimeConverter: ConfigConvert[LocalDateTime] = localDateTimeConfigConvert(DateTimeFormatter.ISO_DATE_TIME)
 
+  implicit val timeZoneConverter: ConfigConvert[TimeZone] = ConfigConvert.viaStringOpt[TimeZone](str => Try(TimeZone.getTimeZone(str)).toOption, _.getID)
+
   final case class ReservationAlreadyMade(body: String) extends Exception {
     private val json = Json.parse(body)
 
     val date: LocalDate = (json \ "specs" \ "day").as[LocalDate]
     val time: LocalTime = (json \ "specs" \ "time_slot").as[LocalTime]
-    val id: String = (json \ "specs" \ "reservation_id").get.toString()
+    val id:      String = (json \ "specs" \ "reservation_id").get.toString()
   }
 
   final case class Slot(start: LocalDateTime, diningType: Option[String], token: Option[String]) {

@@ -1,45 +1,27 @@
 package com.resy
 
-import com.resy.ResyApiWrapper._
 import com.typesafe.scalalogging.StrictLogging
 import play.api.libs.json.{JsArray, JsValue, Json}
 
 import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util.chaining.scalaUtilChainingOps
 
-object BookReservationWorkflow extends StrictLogging {
+class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
 
-  private[this] def findReservation()(implicit bookingDetails: BookingDetails): Future[String] = {
-    logger.info("Attempting to find reservation slot")
-
-    val findResQueryParams = Map(
-      "day"        -> bookingDetails.day,
-      "lat"        -> "0",
-      "long"       -> "0",
-      "party_size" -> bookingDetails.partySize,
-      "venue_id"   -> bookingDetails.venue.id
-    )
-
-    execute(ApiDetails.FindReservation, findResQueryParams)
-  }
-
-  def getReservationDetails(
-    configId: String
-  )(implicit bookingDetails: BookingDetails): Future[String] = {
+  def getReservationDetails(configId: String)(implicit bookingDetails: BookingDetails): Future[String] = {
     val findResQueryParams = Map(
       "config_id"  -> configId,
       "day"        -> bookingDetails.day,
       "party_size" -> bookingDetails.partySize
     )
 
-    execute(ApiDetails.ReservationDetails, findResQueryParams)
+    apiClient.execute(ApiDetails.ReservationDetails, findResQueryParams)
   }
 
-  def bookReservation(
-    resDetailsResp: String
-  )(implicit bookingDetails: BookingDetails): Future[String] = {
+  def bookReservation(resDetailsResp: String)(implicit bookingDetails: BookingDetails): Future[String] = {
     val resDetails = Json.parse(resDetailsResp)
     logger.info(s"URL Response: $resDetailsResp")
 
@@ -52,8 +34,7 @@ object BookReservationWorkflow extends StrictLogging {
 
     val bookToken =
       (resDetails \ "book_token" \ "value").get.toString
-        .stripPrefix("\"")
-        .stripSuffix("\"")
+        .replaceAll("\"", "")
 
     logger.info(s"Book Token: $bookToken")
 
@@ -62,7 +43,7 @@ object BookReservationWorkflow extends StrictLogging {
       "source_id"  -> "resy.com-venue-details"
     ) ++ paymentMethodId.toSeq
 
-    execute(ApiDetails.BookReservation, bookResQueryParams)
+    apiClient.execute(ApiDetails.BookReservation, bookResQueryParams)
   }
 
   def retryFindReservation()(implicit bookingDetails: BookingDetails): Future[String] = {
@@ -85,9 +66,38 @@ object BookReservationWorkflow extends StrictLogging {
       }
   }
 
-  private[this] def findReservationTime(
-    reservationTimes: Seq[JsValue]
-  )(implicit bookingDetails: BookingDetails): Option[String] = {
+  def getLeadTime()(implicit bookingDetails: BookingDetails): Future[FiniteDuration] = {
+    for {
+      venueDetails <- apiClient.execute(ApiDetails.Config, Map("venue_id" -> bookingDetails.venue.id))
+      lt <- Future.successful((Json.parse(venueDetails) \ "lead_time_in_days").as[Int].days)
+    } yield {
+      lt.tap { leadTime =>
+        if (leadTime != bookingDetails.venue.advance) {
+          logger.warn(
+            s"""Please be aware - the venue's lead time for bookings differs to the local configuration!
+               |  You probably want to review when you start trying to book?
+               |  Resy says: $leadTime
+               |  Config says: ${bookingDetails.venue.advance}""".stripMargin)
+        }
+      }
+    }
+  }
+
+  private[this] def findReservation()(implicit bookingDetails: BookingDetails): Future[String] = {
+    logger.info("Attempting to find reservation slot")
+
+    val findResQueryParams = Map(
+      "day" -> bookingDetails.day,
+      "lat" -> "0",
+      "long" -> "0",
+      "party_size" -> bookingDetails.partySize,
+      "venue_id" -> bookingDetails.venue.id
+    )
+
+    apiClient.execute(ApiDetails.FindReservation, findResQueryParams)
+  }
+
+  private[this] def findReservationTime(reservationTimes: Seq[JsValue])(implicit bookingDetails: BookingDetails): Option[String] = {
     reservationTimes
       .tap(_ => logger.info("Attempting to find reservation time from prefs"))
       .map { v => Slot(
@@ -102,7 +112,9 @@ object BookReservationWorkflow extends StrictLogging {
       .tap(v => logger.info(s"Config Id: $v"))
   }
 
-  def listBookingTypes: Seq[Slot] => Unit = { slots =>
+  private def listBookingTypes: Seq[Slot] => Unit = { slots =>
     logger.info(slots.flatMap(_.diningType).distinct.mkString("Distinct dining-types: [\"", "\", \"", "\"]"))
   }
 }
+
+object BookReservationWorkflow extends BookReservationWorkflow(ResyApiWrapper)

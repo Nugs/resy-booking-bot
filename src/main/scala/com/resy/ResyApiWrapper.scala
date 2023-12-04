@@ -10,7 +10,7 @@ import java.util.UUID
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.util.chaining.scalaUtilChainingOps
 
-object ResyApiWrapper extends StrictLogging {
+class ResyApiWrapper extends StrictLogging {
   implicit private val system: ActorSystem                  = ActorSystem()
   implicit private val dispatcher: ExecutionContextExecutor = system.dispatcher
 
@@ -18,7 +18,7 @@ object ResyApiWrapper extends StrictLogging {
 
   def shutdown(): Unit = ws.close()
 
-  val commonHeaders: BookingDetails => Seq[Tuple2[String, String]] = details =>
+  private val commonHeaders: BookingDetails => Seq[Tuple2[String, String]] = details =>
     Seq(
       "Authorization"     -> s"""ResyAPI api_key="${details.apiKey}"""",
       "user-agent"        -> s"Mozilla/5.0 ${UUID.randomUUID().toString}",
@@ -28,15 +28,15 @@ object ResyApiWrapper extends StrictLogging {
       "origin"            -> "https://widgets.resy.com/"
     )
 
-  val responseHandler: WSResponse => String = {
+  private val responseHandler: WSResponse => Either[Exception, String] = {
     case resp if resp.status < 400  =>
       logger.debug(resp.body)
-      resp.body
+      Right(resp.body)
     case resp if resp.status == 412 =>
-      throw ReservationAlreadyMade(resp.body)
+      Left(ReservationAlreadyMade(resp.body))
     case resp =>
       logger.error(s"HTTP ERROR: ${resp.status}: ${resp.body}")
-      throw new Exception(resp.statusText)
+      Left(new Exception(resp.statusText))
   }
 
   def execute(apiDetails: ApiDetails, queryParams: Map[String, String] = Map.empty)(implicit details: BookingDetails): Future[String] = {
@@ -60,5 +60,10 @@ object ResyApiWrapper extends StrictLogging {
       }
       .execute()
       .map(responseHandler)
+  }.flatMap {
+    case Right(v) => Future.successful(v)
+    case Left(t)  => Future.failed(t)
   }
 }
+
+object ResyApiWrapper extends ResyApiWrapper
