@@ -11,7 +11,9 @@ import scala.util.chaining.scalaUtilChainingOps
 
 class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
 
-  def getReservationDetails(configId: String)(implicit bookingDetails: BookingDetails): Future[String] = {
+  def getReservationDetails(
+    configId: String
+  )(implicit bookingDetails: BookingDetails): Future[String] = {
     val findResQueryParams = Map(
       "config_id"  -> configId,
       "day"        -> bookingDetails.day,
@@ -21,7 +23,9 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
     apiClient.execute(ApiDetails.ReservationDetails, findResQueryParams)
   }
 
-  def bookReservation(resDetailsResp: String)(implicit bookingDetails: BookingDetails): Future[String] = {
+  def bookReservation(
+    resDetailsResp: String
+  )(implicit bookingDetails: BookingDetails): Future[String] = {
     val resDetails = Json.parse(resDetailsResp)
     logger.info(s"URL Response: $resDetailsResp")
 
@@ -68,7 +72,10 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
 
   def getLeadTime()(implicit bookingDetails: BookingDetails): Future[FiniteDuration] = {
     for {
-      venueDetails <- apiClient.execute(ApiDetails.Config, Map("venue_id" -> bookingDetails.venue.id))
+      venueDetails <- apiClient.execute(
+        ApiDetails.Config,
+        Map("venue_id" -> bookingDetails.venue.id)
+      )
       lt <- Future.successful((Json.parse(venueDetails) \ "lead_time_in_days").as[Int].days)
     } yield {
       lt.tap { leadTime =>
@@ -77,7 +84,8 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
             s"""Please be aware - the venue's lead time for bookings differs to the local configuration!
                |  You probably want to review when you start trying to book?
                |  Resy says: $leadTime
-               |  Config says: ${bookingDetails.venue.advance}""".stripMargin)
+               |  Config says: ${bookingDetails.venue.advance}""".stripMargin
+          )
         }
       }
     }
@@ -87,33 +95,43 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
     logger.info("Attempting to find reservation slot")
 
     val findResQueryParams = Map(
-      "day" -> bookingDetails.day,
-      "lat" -> "0",
-      "long" -> "0",
+      "day"        -> bookingDetails.day,
+      "lat"        -> "0",
+      "long"       -> "0",
       "party_size" -> bookingDetails.partySize,
-      "venue_id" -> bookingDetails.venue.id
+      "venue_id"   -> bookingDetails.venue.id
     )
 
     apiClient.execute(ApiDetails.FindReservation, findResQueryParams)
   }
 
-  private[this] def findReservationTime(reservationTimes: Seq[JsValue])(implicit bookingDetails: BookingDetails): Option[String] = {
+  private[this] def findReservationTime(
+    reservationTimes: Seq[JsValue]
+  )(implicit bookingDetails: BookingDetails): Option[String] = {
     reservationTimes
       .tap(_ => logger.info("Attempting to find reservation time from prefs"))
-      .map { v => Slot(
-        (v \ "date" \ "start").as[LocalDateTime],
-        (v \ "config" \ "type").asOpt[String],
-        (v \ "config" \ "token").asOpt[String]
-      )}
+      .map { v =>
+        Slot(
+          (v \ "date" \ "start").as[LocalDateTime],
+          (v \ "config" \ "type").asOpt[String],
+          (v \ "config" \ "token").asOpt[String]
+        )
+      }
       .tap(listBookingTypes)
-      .filter(s => bookingDetails.preferences.contains(s.asPreference) || bookingDetails.preferences.contains(s.asPreference.copy(diningType = None)))
+      .filter(s =>
+        bookingDetails.preferences.contains(s.asPreference) || bookingDetails.preferences.contains(
+          s.asPreference.copy(diningType = None)
+        )
+      )
       .map(_.token)
       .head
       .tap(v => logger.info(s"Config Id: $v"))
   }
 
   private def listBookingTypes: Seq[Slot] => Unit = { slots =>
-    logger.info(slots.flatMap(_.diningType).distinct.mkString("Distinct dining-types: [\"", "\", \"", "\"]"))
+    logger.info(
+      slots.flatMap(_.diningType).distinct.mkString("Distinct dining-types: [\"", "\", \"", "\"]")
+    )
   }
 }
 

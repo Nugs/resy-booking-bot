@@ -29,7 +29,7 @@ class ResyApiWrapper extends StrictLogging {
     )
 
   private val responseHandler: WSResponse => Either[Exception, String] = {
-    case resp if resp.status < 400  =>
+    case resp if resp.status < 400 =>
       logger.debug(resp.body)
       Right(resp.body)
     case resp if resp.status == 412 =>
@@ -39,7 +39,9 @@ class ResyApiWrapper extends StrictLogging {
       Left(new Exception(resp.statusText))
   }
 
-  def execute(apiDetails: ApiDetails, queryParams: Map[String, String] = Map.empty)(implicit details: BookingDetails): Future[String] = {
+  def execute(apiDetails: ApiDetails, queryParams: Map[String, String] = Map.empty)(implicit
+    details: BookingDetails
+  ): Future[String] = {
     ws.url(apiDetails.url)
       .withRequestFilter(AhcCurlRequestLogger())
       .addHttpHeaders(commonHeaders(details): _*)
@@ -47,7 +49,7 @@ class ResyApiWrapper extends StrictLogging {
       .pipe { req =>
         (apiDetails.method, apiDetails.contentType) match {
           case ("GET", _) =>
-            req.withQueryStringParameters(queryParams.toSeq:_*)
+            req.withQueryStringParameters(queryParams.toSeq: _*)
           case ("POST", "application/x-www-form-urlencoded") =>
             req
               .addHttpHeaders("Content-Type" -> apiDetails.contentType)

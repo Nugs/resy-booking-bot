@@ -39,7 +39,9 @@ object ResyBookingBot extends App with StrictLogging {
       case Failure(_: TimeoutException) =>
         logger.error(s"Failed to snipe - Retry period exceeded")
       case Failure(f: ReservationAlreadyMade) =>
-        logger.error(s"Failed to snipe - Reservation already in place! On ${f.date} at ${f.time} id: ${f.id}")
+        logger.error(
+          s"Failed to snipe - Reservation already in place! On ${f.date} at ${f.time} id: ${f.id}"
+        )
       case Failure(t) =>
         logger.error(s"Failed to snipe - ${t.getMessage}", t)
       case Success(Some(token)) =>
@@ -61,9 +63,14 @@ object ResyBookingBot extends App with StrictLogging {
       logger.info("Within booking window for venue - attempting immediate reservation")
       bookReservationWorkflow()
     } else {
-      val durationToSleep: FiniteDuration = config.secondsToBookingWindowStart(leadTime) - config.wakeAdjustment
-      logger.info(s"Booking window is $leadTime - bringing us to: ${config.bookingWindowStart(leadTime)}")
-      logger.info(s"Sleeping for ${DurationFormatUtils.formatDuration(durationToSleep.toMillis, "d' days 'HH:mm:ss")}")
+      val durationToSleep: FiniteDuration =
+        config.secondsToBookingWindowStart(leadTime) - config.wakeAdjustment
+      logger.info(
+        s"Booking window is $leadTime - bringing us to: ${config.bookingWindowStart(leadTime)}"
+      )
+      logger.info(
+        s"Sleeping for ${DurationFormatUtils.formatDuration(durationToSleep.toMillis, "d' days 'HH:mm:ss")}"
+      )
       system.scheduler.scheduleOnce(durationToSleep)(bookReservationWorkflow())
     }
   }
