@@ -18,7 +18,7 @@ class ResyApiWrapper extends StrictLogging {
 
   def shutdown(): Unit = ws.close()
 
-  private val commonHeaders: BookingDetails => Seq[Tuple2[String, String]] = details =>
+  private val commonHeaders: BookingDetails => Seq[(String, String)] = details =>
     Seq(
       "Authorization"     -> s"""ResyAPI api_key="${details.apiKey}"""",
       "user-agent"        -> s"Mozilla/5.0 ${UUID.randomUUID().toString}",
