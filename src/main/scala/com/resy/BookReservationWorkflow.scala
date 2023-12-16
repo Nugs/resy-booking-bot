@@ -9,23 +9,19 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.chaining.scalaUtilChainingOps
 
-class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
+class BookReservationWorkflow(apiClient: ResyApiWrapper)(implicit bookingDetails: BookingDetails) extends StrictLogging {
 
-  def getReservationDetails(
-    configId: String
-  )(implicit bookingDetails: BookingDetails): Future[String] = {
+  def getReservationDetails(configId: String): Future[String] = {
     val findResQueryParams = Map(
       "config_id"  -> configId,
       "day"        -> bookingDetails.day,
-      "party_size" -> bookingDetails.partySize
+      "party_size" -> s"${bookingDetails.partySize}"
     )
 
     apiClient.execute(ApiDetails.ReservationDetails, findResQueryParams)
   }
 
-  def bookReservation(
-    resDetailsResp: String
-  )(implicit bookingDetails: BookingDetails): Future[String] = {
+  def bookReservation(resDetailsResp: String): Future[String] = {
     val resDetails = Json.parse(resDetailsResp)
     logger.info(s"URL Response: $resDetailsResp")
 
@@ -50,7 +46,7 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
     apiClient.execute(ApiDetails.BookReservation, bookResQueryParams)
   }
 
-  def retryFindReservation()(implicit bookingDetails: BookingDetails): Future[String] = {
+  def retryFindReservation: Future[String] = {
     findReservation
       .map { findResResp =>
         logger.info(s"Find Reservation Response: $findResResp")
@@ -63,14 +59,14 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
       }
       .flatMap {
         case Some(result) => Future.successful(result)
-        case None         => retryFindReservation()
+        case None         => retryFindReservation
       }
       .recoverWith { _ =>
-        retryFindReservation()
+        retryFindReservation
       }
   }
 
-  def getLeadTime()(implicit bookingDetails: BookingDetails): Future[FiniteDuration] = {
+  def getLeadTime: Future[FiniteDuration] = {
     for {
       venueDetails <- apiClient.execute(
         ApiDetails.Config,
@@ -91,25 +87,23 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
     }
   }
 
-  private[this] def findReservation()(implicit bookingDetails: BookingDetails): Future[String] = {
+  private[this] def findReservation: Future[String] = {
     logger.info("Attempting to find reservation slot")
 
     val findResQueryParams = Map(
       "day"        -> bookingDetails.day,
       "lat"        -> "0",
       "long"       -> "0",
-      "party_size" -> bookingDetails.partySize,
+      "party_size" -> s"${bookingDetails.partySize}",
       "venue_id"   -> bookingDetails.venue.id
     )
 
     apiClient.execute(ApiDetails.FindReservation, findResQueryParams)
   }
 
-  private[this] def findReservationTime(
-    reservationTimes: Seq[JsValue]
-  )(implicit bookingDetails: BookingDetails): Option[String] = {
+  private[this] def findReservationTime(reservationTimes: Seq[JsValue]): Option[String] = {
     reservationTimes
-      .tap(_ => logger.info("Attempting to find reservation time from prefs"))
+      .tap(_ => logger.info("Attempting to find reservation time from preferences"))
       .map { v =>
         Slot(
           (v \ "date" \ "start").as[LocalDateTime],
@@ -135,4 +129,7 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper) extends StrictLogging {
   }
 }
 
-object BookReservationWorkflow extends BookReservationWorkflow(ResyApiWrapper)
+object BookReservationWorkflow {
+  def apply(bookingDetails: BookingDetails): BookReservationWorkflow =
+    new BookReservationWorkflow(ResyApiWrapper)(bookingDetails)
+}
