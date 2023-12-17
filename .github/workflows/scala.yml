@@ -35,12 +35,12 @@ jobs:
         with:
           java-version: '19'
           distribution: 'temurin'
-          cache: 'sbt'
+          cache: sbt
       - name: Resolve dependencies
         run: sbt update
       - name: Run Scalafix
         run: sbt 'scalafixAll --check'
-      - name: Enable coverage instrumentation
+      - name: Build/Test/Coverage
         run: sbt coverage test coverageReport
       - name: Publish JUnit Test Report
         if: always()
