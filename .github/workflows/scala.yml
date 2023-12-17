@@ -13,6 +13,7 @@ concurrency:
 permissions:
   contents: write
   security-events: write
+  checks: write
 
 jobs:
   formatting:

@@ -20,6 +20,7 @@ lazy val root = Project("resy-booking-bot", file("."))
   .settings(
     semanticdbEnabled := true,
     scalafixOnCompile := true,
+    scalafmtOnCompile := true,
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
       "com.typesafe.play"          %% "play-ahc-ws"     % "2.8.18",

@@ -2,7 +2,11 @@ package com
 
 import play.api.libs.json.{Json, Reads}
 import pureconfig.ConfigConvert
-import pureconfig.configurable.{localDateConfigConvert, localDateTimeConfigConvert, localTimeConfigConvert}
+import pureconfig.configurable.{
+  localDateConfigConvert,
+  localDateTimeConfigConvert,
+  localTimeConfigConvert
+}
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, LocalTime}
