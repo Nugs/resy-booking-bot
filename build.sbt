@@ -1,7 +1,7 @@
 name := "resy-booking-bot"
 organization := "com.resy"
 
-scalaVersion := "2.13.8"
+scalaVersion := "2.13.12"
 
 ThisBuild / scalafixDependencies ++= Seq(
   "com.github.vovapolu" %% "scaluzzi"         % "0.1.23",
@@ -23,10 +23,10 @@ lazy val root = Project("resy-booking-bot", file("."))
     scalafmtOnCompile := true,
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
-      "com.typesafe.play"          %% "play-ahc-ws"     % "2.8.18",
+      "org.playframework"          %% "play-ahc-ws"     % "3.0.0",
       "com.github.pureconfig"      %% "pureconfig"      % "0.17.4",
       "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5",
-      "ch.qos.logback"              % "logback-classic" % "1.4.11",
+      "ch.qos.logback"              % "logback-classic" % "1.4.14",
       "org.apache.commons"          % "commons-lang3"   % "3.12.0",
       "org.scalatest"              %% "scalatest"       % "3.2.15" % Test,
       "org.mockito"                 % "mockito-core"    % "5.1.1"  % Test
