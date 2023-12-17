@@ -16,8 +16,6 @@ class ResyApiWrapper extends StrictLogging {
 
   private val ws = AhcWSClient()
 
-  def shutdown(): Unit = ws.close()
-
   private val commonHeaders: BookingDetails => Seq[(String, String)] = details =>
     Seq(
       "Authorization"     -> s"""ResyAPI api_key="${details.apiKey}"""",
@@ -38,6 +36,8 @@ class ResyApiWrapper extends StrictLogging {
       logger.error(s"HTTP ERROR: ${resp.status}: ${resp.body}")
       Left(new Exception(resp.statusText))
   }
+
+  def shutdown(): Unit = ws.close()
 
   def execute(apiDetails: ApiDetails, queryParams: Map[String, String] = Map.empty)(implicit
     details: BookingDetails

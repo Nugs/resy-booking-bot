@@ -1,4 +1,5 @@
 name := "resy-booking-bot"
+organization := "com.resy"
 
 scalaVersion := "2.13.8"
 
@@ -10,7 +11,7 @@ ThisBuild / scalafixDependencies ++= Seq(
 
 ThisBuild / dynverSeparator := "-"
 ThisBuild / dynverSonatypeSnapshots := true
-ThisBuild / githubOwner := "Nugs"
+ThisBuild / githubOwner := sys.env.getOrElse("GITHUB_REPOSITORY_OWNER", "n/a")
 ThisBuild / githubRepository := name.value
 (ThisBuild / githubTokenSource).withRank(KeyRanks.Invisible) :=
   TokenSource.Environment("GITHUB_TOKEN") || TokenSource.GitConfig("github.token")
@@ -19,6 +20,7 @@ lazy val root = Project("resy-booking-bot", file("."))
   .settings(
     semanticdbEnabled := true,
     scalafixOnCompile := true,
+    scalafmtOnCompile := true,
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
       "com.typesafe.play"          %% "play-ahc-ws"     % "2.8.18",
@@ -35,3 +37,10 @@ assembly / assemblyMergeStrategy := {
   case PathList("module-info.class") => MergeStrategy.discard
   case x                             => (assembly / assemblyMergeStrategy).value(x)
 }
+
+assembly / artifact := {
+  val art = (assembly / artifact).value
+  art.withClassifier(Some("assembly"))
+}
+
+addArtifact(assembly / artifact, assembly)

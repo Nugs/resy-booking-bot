@@ -1,8 +1,8 @@
 package com.resy
 
+import java.time._
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.time._
 import java.util.TimeZone
 import scala.concurrent.duration._
 
@@ -26,12 +26,18 @@ final case class BookingDetails(
   venue: Venue,
   date: LocalDate,
   preferences: List[Preference],
-  partySize: String,
+  partySize: Int,
   retryTimeout: FiniteDuration,
   wakeAdjustment: FiniteDuration
 ) {
 
   val day: String = date.format(DateTimeFormatter.ISO_DATE)
+
+  def inBookingWindow(
+    leadTime: FiniteDuration,
+    clock: Clock = Clock.systemDefaultZone()
+  ): Boolean =
+    bookingWindowStart(leadTime).toInstant.getEpochSecond <= clock.instant().getEpochSecond
 
   def bookingWindowStart(leadTime: FiniteDuration): ZonedDateTime =
     date
@@ -39,11 +45,9 @@ final case class BookingDetails(
       .minus(leadTime.toDays, ChronoUnit.DAYS)
       .plusHours(venue.hourOfDayToStartBooking)
 
-  def inBookingWindow(leadTime: FiniteDuration): Boolean =
-    bookingWindowStart(leadTime).toLocalDateTime.isBefore(LocalDateTime.now())
-
-  def secondsToBookingWindowStart(leadTime: FiniteDuration): FiniteDuration =
-    (bookingWindowStart(leadTime).toEpochSecond - LocalDateTime
-      .now()
-      .toEpochSecond(ZoneOffset.UTC)).seconds
+  def secondsToBookingWindowStart(
+    leadTime: FiniteDuration,
+    clock: Clock = Clock.systemDefaultZone()
+  ): FiniteDuration =
+    (bookingWindowStart(leadTime).toEpochSecond - clock.instant().getEpochSecond).seconds
 }
