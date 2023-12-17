@@ -2,11 +2,7 @@ package com
 
 import play.api.libs.json.{Json, Reads}
 import pureconfig.ConfigConvert
-import pureconfig.configurable.{
-  localDateConfigConvert,
-  localDateTimeConfigConvert,
-  localTimeConfigConvert
-}
+import pureconfig.configurable.{localDateConfigConvert, localDateTimeConfigConvert, localTimeConfigConvert}
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, LocalTime}
@@ -37,11 +33,10 @@ package object resy {
     ConfigConvert.viaStringOpt[TimeZone](str => Try(TimeZone.getTimeZone(str)).toOption, _.getID)
 
   final case class ReservationAlreadyMade(body: String) extends Exception {
-    private val json = Json.parse(body)
-
     val date: LocalDate = (json \ "specs" \ "day").as[LocalDate]
     val time: LocalTime = (json \ "specs" \ "time_slot").as[LocalTime]
     val id: String      = (json \ "specs" \ "reservation_id").get.toString()
+    private val json = Json.parse(body)
   }
 
   final case class Slot(start: LocalDateTime, diningType: Option[String], token: Option[String]) {

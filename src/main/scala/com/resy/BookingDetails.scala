@@ -33,17 +33,17 @@ final case class BookingDetails(
 
   val day: String = date.format(DateTimeFormatter.ISO_DATE)
 
-  def bookingWindowStart(leadTime: FiniteDuration): ZonedDateTime =
-    date
-      .atStartOfDay(venue.timeZone.toZoneId)
-      .minus(leadTime.toDays, ChronoUnit.DAYS)
-      .plusHours(venue.hourOfDayToStartBooking)
-
   def inBookingWindow(
     leadTime: FiniteDuration,
     clock: Clock = Clock.systemDefaultZone()
   ): Boolean =
     bookingWindowStart(leadTime).toInstant.getEpochSecond <= clock.instant().getEpochSecond
+
+  def bookingWindowStart(leadTime: FiniteDuration): ZonedDateTime =
+    date
+      .atStartOfDay(venue.timeZone.toZoneId)
+      .minus(leadTime.toDays, ChronoUnit.DAYS)
+      .plusHours(venue.hourOfDayToStartBooking)
 
   def secondsToBookingWindowStart(
     leadTime: FiniteDuration,
