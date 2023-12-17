@@ -1,7 +1,7 @@
 package com.resy
 
-import akka.actor.ActorSystem
 import com.typesafe.scalalogging.StrictLogging
+import org.apache.pekko.actor.ActorSystem
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.libs.ws.ahc.{AhcCurlRequestLogger, AhcWSClient}
