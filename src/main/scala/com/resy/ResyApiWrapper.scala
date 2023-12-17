@@ -25,6 +25,7 @@ class ResyApiWrapper extends StrictLogging {
       "referer"           -> "https://widgets.resy.com/",
       "origin"            -> "https://widgets.resy.com/"
     )
+
   private val responseHandler: WSResponse => Either[Exception, String] = {
     case resp if resp.status < 400 =>
       logger.debug(resp.body)
