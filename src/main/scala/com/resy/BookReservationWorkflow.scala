@@ -9,7 +9,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.chaining.scalaUtilChainingOps
 
-class BookReservationWorkflow(apiClient: ResyApiWrapper)(implicit bookingDetails: BookingDetails) extends StrictLogging {
+class BookReservationWorkflow(apiClient: ResyApiWrapper)(implicit bookingDetails: BookingDetails)
+    extends StrictLogging {
 
   def getReservationDetails(configId: String): Future[String] = {
     val findResQueryParams = Map(
@@ -130,6 +131,7 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper)(implicit bookingDetails
 }
 
 object BookReservationWorkflow {
+
   def apply(bookingDetails: BookingDetails): BookReservationWorkflow =
     new BookReservationWorkflow(ResyApiWrapper)(bookingDetails)
 }

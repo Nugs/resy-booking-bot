@@ -3,7 +3,7 @@ package com.resy
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import java.time.{Clock, Instant, LocalDate, LocalTime, ZonedDateTime}
+import java.time._
 import java.util.TimeZone
 import scala.concurrent.duration.DurationInt
 
@@ -60,7 +60,8 @@ class BookingDetailsTest extends AnyWordSpecLike {
           Instant.parse("2023-12-30T10:00:00-05:00"),
           TimeZone.getTimeZone("America/New_York").toZoneId
         )
-      ).toHours shouldBe 24
+      )
+      .toHours shouldBe 24
 
     details
       .secondsToBookingWindowStart(
@@ -69,7 +70,8 @@ class BookingDetailsTest extends AnyWordSpecLike {
           Instant.parse("2023-12-30T15:00:00Z"),
           TimeZone.getTimeZone("America/New_York").toZoneId
         )
-      ).toHours shouldBe 24
+      )
+      .toHours shouldBe 24
 
     details
       .secondsToBookingWindowStart(
@@ -78,7 +80,8 @@ class BookingDetailsTest extends AnyWordSpecLike {
           Instant.parse("2023-12-30T10:00:00Z"),
           TimeZone.getTimeZone("Europe/London").toZoneId
         )
-      ).toHours shouldBe 29
+      )
+      .toHours shouldBe 29
   }
 
   "Verify we are inside/outside the booking window correctly" in {
