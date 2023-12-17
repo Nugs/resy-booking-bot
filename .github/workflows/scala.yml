@@ -37,24 +37,17 @@ jobs:
         cache: 'sbt'
     - name: Resolve dependencies
       run: sbt update
-    - name: Enable coverage instrumentation
-      run: sbt coverage
-    - name: Compile all sources
-      run: sbt 'all compile Test/compile'
     - name: Run Scalafix
       run: sbt 'scalafixAll --check'
-    - name: Run tests
-      run: sbt test
+    - name: Enable coverage instrumentation
+      run: sbt coverage test coverageReport
     - name: Publish JUnit Test Report
       if: always()
       uses: mikepenz/action-junit-report@v4.0.3
       with:
         report_paths: "**/target/test-reports/*.xml"
-      # Optional: This step uploads information to the GitHub dependency graph and unblocking Dependabot alerts for the repository
     - name: Upload dependency graph
       uses: scalacenter/sbt-dependency-submission@v2
-    - name: Generate coverage report
-      run: sbt coverageReport
     - name: Upload coverage report to Codecov
       uses: codecov/codecov-action@v3.1.4
       env:
