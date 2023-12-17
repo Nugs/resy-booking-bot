@@ -18,9 +18,10 @@ ThisBuild / githubRepository := name.value
 
 lazy val root = Project("resy-booking-bot", file("."))
   .settings(
-    semanticdbEnabled := true,
     scalafixOnCompile := true,
     scalafmtOnCompile := true,
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision,
     scalacOptions += "-Ywarn-unused",
     libraryDependencies ++= Seq(
       "org.playframework"          %% "play-ahc-ws"     % "3.0.0",
