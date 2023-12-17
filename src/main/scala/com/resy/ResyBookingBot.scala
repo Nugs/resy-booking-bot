@@ -1,8 +1,8 @@
 package com.resy
 
-import akka.actor.ActorSystem
 import com.typesafe.scalalogging.StrictLogging
 import org.apache.commons.lang3.time.DurationFormatUtils
+import org.apache.pekko.actor.ActorSystem
 import play.api.libs.json._
 import pureconfig._
 import pureconfig.generic.auto._
