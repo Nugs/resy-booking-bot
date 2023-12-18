@@ -15,7 +15,7 @@ final case class Venue(
   timeZone: TimeZone = TimeZone.getTimeZone("America/New_York")
 )
 
-final case class Preference(
+case class Preference(
   time: LocalTime,
   diningType: Option[String] = None
 )

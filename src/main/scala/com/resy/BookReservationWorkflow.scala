@@ -106,18 +106,22 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper)(implicit bookingDetails
     reservationTimes
       .tap(_ => logger.info("Attempting to find reservation time from preferences"))
       .map { v =>
-        Slot(
+        new Slot(
           (v \ "date" \ "start").as[LocalDateTime],
           (v \ "config" \ "type").asOpt[String],
           (v \ "config" \ "token").asOpt[String]
         )
       }
       .tap(listBookingTypes)
-      .filter(s =>
-        bookingDetails.preferences.contains(s.asPreference) || bookingDetails.preferences.contains(
-          s.asPreference.copy(diningType = None)
-        )
-      )
+      .pipe { slots =>
+        bookingDetails.preferences.find {
+            case Preference(time, None)       => slots.exists(s => s.time == time)
+            case Preference(time, diningType) => slots.exists(s => s.time == time && s.diningType == diningType)
+          }.flatMap {
+            case Preference(time, None)       => slots.find(s => s.time == time)
+            case Preference(time, diningType) => slots.find(s => s.time == time && s.diningType == diningType)
+          }
+      }
       .map(_.token)
       .head
       .tap(v => logger.info(s"Config Id: $v"))
