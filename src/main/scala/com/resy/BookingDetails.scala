@@ -15,7 +15,7 @@ final case class Venue(
   timeZone: TimeZone = TimeZone.getTimeZone("America/New_York")
 )
 
-// scalafix:ok
+@SuppressWarnings(Array("scalafix:MissingFinal"))
 case class Preference(
   time: LocalTime,
   diningType: Option[String] = None
