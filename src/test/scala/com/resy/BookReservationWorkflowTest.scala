@@ -1,13 +1,12 @@
 package com.resy
 
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.{eq => eql, _}
 import org.mockito.Mockito._
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 
-import java.time.{Clock, Instant, LocalDate, LocalTime, ZoneId}
+import java.time._
 import java.util.TimeZone
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
@@ -27,9 +26,9 @@ class BookReservationWorkflowTest extends AsyncWordSpec with Matchers with Event
   )
 
   private val preferences: List[Preference] = List(
-    Preference(time = LocalTime.of(18,  0), Some("Inside")),
+    Preference(time = LocalTime.of(18, 0), Some("Inside")),
     Preference(time = LocalTime.of(18, 30), Some("Inside")),
-    Preference(time = LocalTime.of(18,  0), None),
+    Preference(time = LocalTime.of(18, 0), None),
     Preference(time = LocalTime.of(18, 30), None)
   )
 
@@ -88,7 +87,11 @@ class BookReservationWorkflowTest extends AsyncWordSpec with Matchers with Event
           |  }
           |}""".stripMargin
 
-      when(mockApi.execute(eql(ApiDetails.FindReservation), any[Map[String, String]])(any[BookingDetails]))
+      when(
+        mockApi.execute(eql(ApiDetails.FindReservation), any[Map[String, String]])(
+          any[BookingDetails]
+        )
+      )
         .thenReturn(Future.successful(respJson))
 
       eventually {
@@ -127,14 +130,22 @@ class BookReservationWorkflowTest extends AsyncWordSpec with Matchers with Event
           |  }
           |}""".stripMargin
 
-      when(mockApi.execute(eql(ApiDetails.FindReservation), any[Map[String, String]])(any[BookingDetails]))
+      when(
+        mockApi.execute(eql(ApiDetails.FindReservation), any[Map[String, String]])(
+          any[BookingDetails]
+        )
+      )
         .thenReturn(Future.successful(respJson))
 
       eventually {
-        new BookReservationWorkflow(mockApi)(details.copy(preferences = List(
-          Preference(LocalTime.of(18, 0), None),
-          Preference(LocalTime.of(18, 30), Some("Inside"))
-        ))).retryFindReservation.map(_ shouldBe "Outside/18:00")
+        new BookReservationWorkflow(mockApi)(
+          details.copy(preferences =
+            List(
+              Preference(LocalTime.of(18, 0), None),
+              Preference(LocalTime.of(18, 30), Some("Inside"))
+            )
+          )
+        ).retryFindReservation.map(_ shouldBe "Outside/18:00")
       }
     }
   }

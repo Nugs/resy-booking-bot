@@ -114,12 +114,16 @@ class BookReservationWorkflow(apiClient: ResyApiWrapper)(implicit bookingDetails
       }
       .tap(listBookingTypes)
       .pipe { slots =>
-        bookingDetails.preferences.find {
-            case Preference(time, None)       => slots.exists(s => s.time == time)
-            case Preference(time, diningType) => slots.exists(s => s.time == time && s.diningType == diningType)
-          }.flatMap {
-            case Preference(time, None)       => slots.find(s => s.time == time)
-            case Preference(time, diningType) => slots.find(s => s.time == time && s.diningType == diningType)
+        bookingDetails.preferences
+          .find {
+            case Preference(time, None) => slots.exists(s => s.time == time)
+            case Preference(time, diningType) =>
+              slots.exists(s => s.time == time && s.diningType == diningType)
+          }
+          .flatMap {
+            case Preference(time, None) => slots.find(s => s.time == time)
+            case Preference(time, diningType) =>
+              slots.find(s => s.time == time && s.diningType == diningType)
           }
       }
       .map(_.token)
