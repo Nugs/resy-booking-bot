@@ -2,11 +2,7 @@ package com
 
 import play.api.libs.json.{Json, Reads}
 import pureconfig.ConfigConvert
-import pureconfig.configurable.{
-  localDateConfigConvert,
-  localDateTimeConfigConvert,
-  localTimeConfigConvert
-}
+import pureconfig.configurable.{localDateConfigConvert, localDateTimeConfigConvert, localTimeConfigConvert}
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, LocalTime}
@@ -44,6 +40,9 @@ package object resy {
     val id: String      = (json \ "specs" \ "reservation_id").get.toString()
   }
 
-  final class Slot(start: LocalDateTime, override val diningType: Option[String], val token: Option[String])
-    extends Preference(time = start.toLocalTime)
+  final class Slot(
+    start: LocalDateTime,
+    override val diningType: Option[String],
+    val token: Option[String]
+  ) extends Preference(time = start.toLocalTime)
 }
