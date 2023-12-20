@@ -1,5 +1,3 @@
-
-
 name := "resy-booking-bot"
 organization := "com.resy"
 
@@ -17,9 +15,8 @@ ThisBuild / dynverSeparator := "-"
 ThisBuild / dynverSonatypeSnapshots := true
 ThisBuild / githubOwner := sys.env.getOrElse("GITHUB_REPOSITORY_OWNER", "n/a")
 ThisBuild / githubRepository := name.value
-(ThisBuild / githubTokenSource).withRank(KeyRanks.Invisible) := TokenSource.Environment(
-  "GITHUB_TOKEN"
-)
+(ThisBuild / githubTokenSource).withRank(KeyRanks.Invisible) :=
+  TokenSource.Environment("GITHUB_TOKEN")
 
 lazy val root = Project("resy-booking-bot", file("."))
   .disablePlugins(
